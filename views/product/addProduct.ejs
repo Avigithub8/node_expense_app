@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Product</title>
+  </head>
+  <body>
+    <h2>Welcome, <%= username %>!</h2>
+    <div>
+      <form id="addProductForm" action="/product/addProduct" method="POST">
+        <input type="hidden" name="userId" value="<%= userId %>" required />
+        <label>Amount: <input type="text" name="amount" required /></label>
+        <label
+          >Description: <input type="text" name="description" required
+        /></label>
+        <label>Category: <input type="text" name="category" required /></label>
+
+        <button type="submit">Add Product</button>
+      </form>
+      
+    </div>
+    <br />
+
+    <% if (isPremium) { %>
+    <p>You are a premium user!</p>
+
+    <h2>Your Products:</h2>
+    <ul id="productList">
+      <% for (const product of products) { %>
+      <li>
+        <%= product.amount %> - <%= product.description %> - <%=
+        product.category %>
+        <a
+          href="/product/addProduct/<%= userId %>"
+          onclick="deleteProduct('<%= product.id %>', '<%= userId %>')"
+          >Delete</a
+        >
+      </li>
+      <% } %>
+    </ul>
+
+    <button onclick="showLeaderboard()">Show Leaderboard</button>
+
+    <button onclick="viewExpenses('daily','<%= userId %>',currentPage)">
+      View Daily Expenses
+    </button>
+    <button onclick="viewExpenses('weekly','<%= userId %>',currentPage)">
+      View Weekly Expenses
+    </button>
+    <button onclick="viewExpenses('monthly','<%= userId %>',currentPage)">
+      View Monthly Expenses
+    </button>
+
+    <button id="downloadButton" onclick="downloadExpenses('<%= userId %>')">
+      Download Expenses
+    </button>
+
+    <div id="expensesSection" style="display: none"></div>
+    <div id="leaderboardSection" style="display: none"></div>
+
+    <% } else { %>
+    <a href="/product/buyPremium?userId=<%= userId %>">Buy Premium</a>
+    <h2>Your Products:</h2>
+    <ul id="productList">
+      <% for (const product of products) { %>
+      <li>
+        <%= product.amount %> - <%= product.description %> - <%=
+        product.category %>
+
+        <a
+          href="/product/addProduct/<%= userId %>"
+          onclick="deleteProduct('<%= product.id %>', '<%= userId %>')"
+          >Delete</a
+        >
+      </li>
+      <% } %>
+    </ul>
+
+    <% } %>
+
+    <div id="leaderboardSection" style="display: none"></div>
+    <div id="paginationControls">
+      <button onclick="loadPage('prev')">Previous</button>
+      <span>Page <span id="currentPage">1</span> of <%= totalPages %></span>
+      <button onclick="loadPage('next')">Next</button>
+    </div>
+    <script>
+      let isPremium = `<%= isPremium %>`;
+      console.log("isPremium", isPremium);
+
+      let currentPage = 1;
+      let totalPages = "<%= totalPages %>" || 1;
+      console.log("totalPages", totalPages);
+
+      document.addEventListener("DOMContentLoaded", function () {
+        viewExpenses("daily", "<%= userId %>", 1);
+      });
+      async function loadPage(action) {
+        if (action === "prev" && currentPage > 1) {
+          currentPage--;
+        } else if (action === "next" && currentPage < totalPages) {
+          currentPage++;
+        }
+        document.getElementById("currentPage").innerText = currentPage;
+        const duration = `<%= duration %>`;
+        const userId = `<%= userId %>`;
+        await viewExpenses(duration, userId, currentPage);
+      }
+
+      async function deleteProduct(productId, userId) {
+        try {
+          const response = await fetch(
+            `http://localhost:3000/product/deleteProduct/${productId}`,
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          const productList = document.getElementById("productList");
+
+          const deletedProductElement = document.querySelector(
+            `li:has(button[onclick="deleteProduct(${productId})"])`
+          );
+          deletedProductElement.remove();
+
+          window.location.href = `/product/addProduct/${userId}`;
+        } catch (error) {
+          console.error("Error deleting product:", error);
+        }
+      }
+
+      async function showLeaderboard() {
+        try {
+          const response = await fetch(
+            "http://localhost:3000/product/leaderboard"
+          );
+          const data = await response.json();
+
+          if (data.success) {
+            const leaderboardSection =
+              document.getElementById("leaderboardSection");
+            leaderboardSection.innerHTML = generateLeaderboardHTML(
+              data.leaderboard
+            );
+            leaderboardSection.style.display = "block";
+          } else {
+            console.error("Error fetching leaderboard data:", data.message);
+          }
+        } catch (error) {
+          console.error("Error fetching leaderboard data:", error);
+        }
+      }
+
+      function generateLeaderboardHTML(leaderboard) {
+        if (!leaderboard || leaderboard.length === 0) {
+          return "<p>No users in the leaderboard</p>";
+        }
+
+        const leaderboardHTML = leaderboard
+          .map(
+            (user, index) => `
+      <li>
+        <span class="rank">Index: ${index + 1} ,</span>
+        <span class="username">Name: ${user.username} ,</span>
+        <span class="amount">Amount: ${getUpdatedAmount(user)} </span>
+        ${
+          user.username === "random"
+            ? `<button onclick="deleteUser('${user.id}')">Delete</button>`
+            : ""
+        }
+       </li>
+    `
+          )
+          .join("");
+
+        return `<ul>${leaderboardHTML}</ul>`;
+      }
+
+      function getUpdatedAmount(user) {
+        const totalAmount = user.Products.reduce(
+          (sum, product) => sum + product.amount,
+          0
+        );
+
+        return totalAmount;
+      }
+
+      async function deleteUser(userId) {
+        try {
+          const response = await fetch(
+            `http://localhost:3000/user/deleteUser/${userId}`,
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+
+          await showLeaderboard();
+        } catch (error) {
+          console.error("Error deleting user:", error);
+          alert("Error deleting user. Check console for details.");
+        }
+      }
+
+      async function viewExpenses(duration, userId, page) {
+        try {
+          const response = await fetch(
+            `http://localhost:3000/product/expenses?duration=${duration}&userId=${userId}&page=${page}`
+          );
+          const data = await response.json();
+
+          //console.log("data", data);
+
+          if (data.success) {
+            const expensesSection = document.getElementById("expensesSection");
+            expensesSection.innerHTML = generateExpensesHTML(data.expenses);
+            expensesSection.style.display = "block";
+
+            const downloadButton = document.getElementById("downloadButton");
+            downloadButton.disabled = !isPremium;
+          } else {
+            console.error("Error fetching expenses data:", data.message);
+          }
+        } catch (error) {
+          console.error("Error fetching expenses data:", error);
+        }
+      }
+
+      async function downloadExpenses(userId) {
+        try {
+          const response = await fetch(
+            `http://localhost:3000/product/downloadExpenses?userId=${userId}`
+          );
+          const blob = await response.blob();
+
+          const link = document.createElement("a");
+          link.href = window.URL.createObjectURL(blob);
+          link.download = "expenses_data.txt";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (error) {
+          console.error("Error downloading expenses:", error);
+        }
+      }
+
+      function generateExpensesHTML(expenses) {
+        if (!expenses || expenses.length === 0) {
+          return "<p>No expenses found</p>";
+        }
+
+        const expensesHTML = expenses
+          .map(
+            (expense) => `
+            <li>
+                ${expense.amount} - ${expense.description} - ${expense.category}
+            </li>
+        `
+          )
+          .join("");
+
+        return `<ul>${expensesHTML}</ul>`;
+      }
+
+     
+    </script>
+  </body>
+</html>
