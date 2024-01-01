@@ -5,26 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sign In</title>
     <link rel="stylesheet" href="/css/style.css" />
-    
   </head>
   <body>
     <div>
-    <form id="signInForm" action="/user/signin" method="POST">
-      <label
-        >Email: <input type="email" name="email" id="email" required
-      /></label>
-      <label
-        >Password:
-        <input type="password" name="password" id="password" required
-      /></label>
-      <button type="submit">Sign In</button>
-      <p class="error-message" id="errorMessage"></p>
-    </form>
-    <p style="text-align: center;">Forgot your password? <a href="./forgotpassword">Reset it here</a>.</p>
-  </div>
+      <form id="signInForm" action="/user/signin" method="POST">
+        <label
+          >Email: <input type="email" name="email" id="email" required
+        /></label>
+        <label
+          >Password:
+          <input type="password" name="password" id="password" required
+        /></label>
+        <button type="submit">Sign In</button>
+        <p class="error-message" id="errorMessage"></p>
+      </form>
+      <p style="text-align: center">
+        Forgot your password? <a href="./forgotpassword">Reset it here</a>.
+      </p>
+    </div>
     <script>
-     
-
       document
         .getElementById("signInForm")
         .addEventListener("submit", async function (event) {
@@ -43,39 +42,39 @@
             errorMessage.textContent = "";
             try {
               const authToken = localStorage.getItem("jwtToken");
-              console.log("Autho", authToken);
-              // const jwtToken=res.cookies.jwtToken
-              //  console.log("jwt",jwtToken)
-              // Make a request to your signin endpoint
-              const response = await fetch("http://localhost:3000/user/signin", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  // "authorization": "Bearer " + authToken,
-                },
-                body: JSON.stringify({
-                  email,
-                  password,
-                }),
-              });
+
+              const response = await fetch(
+                "http://localhost:3000/user/signin",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    // "authorization": "Bearer " + authToken,
+                  },
+                  body: JSON.stringify({
+                    email,
+                    password,
+                  }),
+                }
+              );
               if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
               }
 
               const data = await response.json();
 
-              
               if (response.ok) {
-                
                 const token = data.token;
                 console.log("this is token", token);
-                
-                res.cookie("jwtToken", token, { httpOnly: true, maxAge: 3600000 * 1000 });
+
+                res.cookie("jwtToken", token, {
+                  httpOnly: true,
+                  maxAge: 3600000 * 1000,
+                });
                 localStorage.setItem("jwtToken", token);
-                
-                window.location.href = "/product/addProduct"; 
+
+                window.location.href = "/product/addProduct";
               } else {
-                
                 errorMessage.textContent = data.message;
               }
             } catch (error) {
@@ -86,7 +85,6 @@
         });
 
       function isValidEmail(email) {
-       
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
       }

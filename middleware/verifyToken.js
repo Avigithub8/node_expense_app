@@ -30,5 +30,5 @@ const verifyToken = (req, res, next) => {
   localStorage.setItem("jwtToken", token);
 };
 
-// Export the secretKey for use in other files
+
 module.exports = { verifyToken, generateToken };

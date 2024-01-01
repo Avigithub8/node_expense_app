@@ -25,7 +25,7 @@ const sendinblueConfig = {
   },
 };
 
-console.log("''''''''''''",sendinblueConfig)
+
 
 router.post("/signup", async (req, res) => {
   try {
@@ -185,8 +185,7 @@ async function sendResetEmail(email, resetToken) {
       `,
   };
 
-  console.log("==========", emailData);
-  console.log("==========++", sendinblueConfig);
+ 
   try {
     await axios.post(
       "https://api.sendinblue.com/v3/smtp/email",
@@ -199,7 +198,7 @@ async function sendResetEmail(email, resetToken) {
       "Error sending email:",
       error.response ? error.response.data : error.message
     );
-    // res.status(500).json({ error: "Failed to send email" });
+   
   }
 }
 

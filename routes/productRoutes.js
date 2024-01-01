@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-//const User = require("../models/UserModel");
 const User = require("../models/user");
 const path = require("path");
 const fs = require("fs");
@@ -12,27 +11,23 @@ const bcrypt = require("bcrypt");
 const localStorage = require("localStorage");
 const sequelize = require("../models/index");
 const { Op } = require("sequelize");
-require('dotenv').config();
+require("dotenv").config();
 
 router.use(verifyToken);
 
 localStorage.getItem("jwtToken");
 
-
-const PAGE_SIZE = 5; 
+const PAGE_SIZE = 5;
 
 router.get("/addProduct/:userId", verifyToken, async (req, res) => {
   const userId = req.params.userId;
-  //const page = req.query.page || 1;
-  const duration = req.query.duration || 'monthly';
+
+  const duration = req.query.duration || "monthly";
   try {
     const userProducts = await User.findByPk(userId, { include: Product });
 
-    
     const totalProducts = userProducts?.Products.length || 0;
     const totalPages = Math.ceil(totalProducts / PAGE_SIZE);
-    //const offset = (page - 1) * PAGE_SIZE;
-    //const products = userProducts?.Products.slice(offset, offset + PAGE_SIZE) || [];
 
     const username =
       userProducts?.username !== null && userProducts?.username !== undefined
@@ -45,7 +40,7 @@ router.get("/addProduct/:userId", verifyToken, async (req, res) => {
       products: userProducts?.Products || [],
       userId: userId,
       totalPages: totalPages,
-      duration:duration,
+      duration: duration,
     });
   } catch (error) {
     console.error("Error rendering addProduct template:", error);
@@ -55,14 +50,13 @@ router.get("/addProduct/:userId", verifyToken, async (req, res) => {
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret:process.env.RAZORPAY_KEY_SECRET,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
 router.get("/buyPremium", async (req, res) => {
   try {
     const userId = req.query.userId;
 
-    console.log("^^^^^^", userId);
     res.render("product/buyPremium", { userId });
   } catch (error) {
     console.error(error);
@@ -84,17 +78,11 @@ router.post("/buyPremium", async (req, res) => {
       payment_capture: 1,
     });
 
-    // res.render("product/buyPremium", {
-    //   orderId: order.id,
-    //   keyId: razorpay.key_id,
-    //   amount: order.amount,
-    // });
     res.status(201).json({
       orderId: order.id,
       keyId: razorpay.key_id,
       amount: order.amount,
     });
-    // res.redirect(`/product/verifyPayment/${userId}`)
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -150,7 +138,6 @@ router.post("/addProduct", async (req, res) => {
       category: category,
     });
 
-    //res.json({ success: true, message: 'Product added successfully' });
     res.redirect(`/product/addProduct/${userId}`);
   } catch (error) {
     console.error("Error adding product:", error);
@@ -212,8 +199,6 @@ router.delete("/deleteProduct/:productId", async (req, res) => {
 
 router.get("/buyPremium/:userId", verifyToken, async (req, res) => {
   try {
-    const userid = req.userId;
-
     const userId = req.params.userId;
 
     const user = await User.findByPk(userId);
@@ -258,7 +243,7 @@ async function getTotalExpenses(userId) {
     return totalExpenses;
   } catch (error) {
     console.error("Error getting total expenses:", error);
-    return 0; // Return 0 in case of an error
+    return 0;
   }
 }
 
@@ -266,16 +251,14 @@ router.get("/expenses", async (req, res) => {
   const { duration, userId, page } = req.query;
   const pageSize = 5;
 
-  console.log('duration====', duration, userId, page);
-
   try {
     const totalExpenses = await getTotalExpenses(userId);
     const totalPages = Math.ceil(totalExpenses / pageSize);
 
     const offset = (page - 1) * pageSize;
-    const expenses = await fetchExpenses(duration, userId,offset,pageSize);
-   
-    res.json({ success: true, expenses,totalPages });
+    const expenses = await fetchExpenses(duration, userId, offset, pageSize);
+
+    res.json({ success: true, expenses, totalPages });
   } catch (error) {
     console.error("Error fetching expenses:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -284,10 +267,8 @@ router.get("/expenses", async (req, res) => {
 
 router.get("/downloadExpenses", async (req, res) => {
   const { userId } = req.query;
-  console.log("userId====", userId);
+
   try {
-
-
     const expenses = await fetchExpensesForUser(userId);
 
     const fileContent = generateFileContent(expenses);
@@ -336,7 +317,7 @@ function generateFileContent(expenses) {
     .join("\n");
 }
 
-async function fetchExpenses(duration, userId,offset,limit) {
+async function fetchExpenses(duration, userId, offset, limit) {
   try {
     let expenses;
     const userCondition = { userId: userId };
@@ -356,8 +337,6 @@ async function fetchExpenses(duration, userId,offset,limit) {
           offset,
           limit,
         });
-
-        console.log("Products:", expenses.toString());
       } catch (error) {
         console.error("Error fetching products:", error);
       }
@@ -393,7 +372,6 @@ async function fetchExpenses(duration, userId,offset,limit) {
       return [];
     }
 
-   
     return expenses.map((expense) => ({
       amount: expense.amount,
       description: expense.description,
@@ -404,8 +382,5 @@ async function fetchExpenses(duration, userId,offset,limit) {
     return [];
   }
 }
-
-
-
 
 module.exports = router;
