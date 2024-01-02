@@ -36,7 +36,7 @@ app.use(morgan('combined', { stream: accessLogStream }));
 app.get("/", (req, res) => {
   return res.send("This is file");
 });
-
+const PORT = process.env.PORT || 3000;
 sequelize.sync().then(() => {
-  app.listen(3000);
+  app.listen(PORT);
 });
