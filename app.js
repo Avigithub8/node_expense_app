@@ -11,6 +11,7 @@ const compression = require('compression');
 const morgan = require('morgan');
 const fs = require('fs');
 //const helmet = require('helmet');
+const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
@@ -20,7 +21,10 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(bodyParser.urlencoded({ extended: true }));
-
+const corsOptons = {
+	origin: 'http://localhost:3000/'
+		};
+app.use(cors(corsOptons));
 //console.log(process.env.NODE_ENV)
 
 app.use("/user", userRoutes);
