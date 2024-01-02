@@ -22,7 +22,7 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(bodyParser.urlencoded({ extended: true }));
 const corsOptons = {
-	origin: 'http://localhost:3000/'
+	origin: 'http://localhost:5500/'
 		};
 app.use(cors(corsOptons));
 //console.log(process.env.NODE_ENV)
@@ -40,7 +40,7 @@ app.use(morgan('combined', { stream: accessLogStream }));
 app.get("/", (req, res) => {
   return res.send("This is file");
 });
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5500;
 sequelize.sync().then(() => {
   app.listen(PORT);
 });
