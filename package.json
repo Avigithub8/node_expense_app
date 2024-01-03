@@ -10,7 +10,7 @@
     "start:dev": "nodemon app.js"
   },
   "engines": {
-    "node": "20.13.0"
+    "node": "20.9.0"
   },
   "keywords": [],
   "author": "",
