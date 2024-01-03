@@ -37,8 +37,8 @@ const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'),
 
 app.use(morgan('combined', { stream: accessLogStream }));
 
-app.get("/", (req, res) => {
-  return res.send("This is file");
+app.get("/api", (req, res) => {
+  return res.status(200).send("This is file");
 });
 const PORT = process.env.PORT || 3000;
 sequelize.sync().then(() => {
